@@ -8,9 +8,9 @@ describe("Block Class", () => {
         expect(block).toBeDefined();
     });
 
-    test("Block class constructor test", () => {
+    test("Block class height test", () => {
         let block: IBlock = new BlockClass.Block({data: 'Genesis Block'});
-        expect(block).toBeDefined();
+        expect(block.getHeight()).toBe(0);
     });
 
 });

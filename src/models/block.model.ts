@@ -72,7 +72,6 @@ class Block implements IBlock {
 
             // Resolve with the data if the object isn't the Genesis block
         });
-
     }
 
     getHeight(): number {
