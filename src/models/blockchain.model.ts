@@ -9,14 +9,11 @@
  */
 import {IBlock} from "./block.model";
 
-const BlockClass = require('./block.model')
+const BlockClass = require('./block.model');
 const SHA256 = require('crypto-js/sha256');
 const bitcoinMessage = require('bitcoinjs-message');
 
 export interface IBlockchain {
-    chain: Array<IBlock>;
-    height: number;
-
     initializeChain(): Promise<any>;
     getChainHeight(): Promise<any>;
     _addBlock(block: IBlock): Promise<any>;
@@ -26,7 +23,6 @@ export interface IBlockchain {
     getBlockByHeight(height: number): Promise<any>;
     getStarsByWalletAddress (address: string): Promise<any>;
     validateChain(): Promise<any>;
-
 }
 
 class Blockchain implements IBlockchain{
@@ -147,7 +143,7 @@ class Blockchain implements IBlockchain{
     getBlockByHeight(height: number): Promise<any> {
         let self = this;
         return new Promise((resolve, reject) => {
-            let block = self.chain.filter(p => p.height === height)[0];
+            let block = self.chain.filter(p => p.getHeight() === height)[0];
             if(block){
                 resolve(block);
             } else {

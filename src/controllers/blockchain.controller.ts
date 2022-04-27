@@ -5,7 +5,7 @@
  * Blockchain dataset
  */
 import { Express, Request, Response, NextFunction } from "express";
-import {IBlockchain} from "../models/blockchain.model";
+import { IBlockchain } from "../models/blockchain.model";
 
 class BlockchainController {
 

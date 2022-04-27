@@ -10,23 +10,17 @@
  */
 
 export interface IBlock {
+    validate(): Promise<any>;
+    getBData(): Promise<any>;
+    getHeight(): number;
+}
+
+class Block implements IBlock {
     hash?: string;              // Hash of the block
     height: number;             // Block Height (consecutive number of each block)
     body: string;               // Will contain the transactions stored in the block, by default it will encode the data
     time: number;               // Timestamp for the Block creation
     previousBlockHash?: string;  // Reference to the previous Block Hash
-
-    validate(): Promise<any>;
-    getBData(): Promise<any>;
-}
-
-class Block implements IBlock {
-
-    hash?: string;
-    height: number;
-    body: string;
-    time: number;
-    previousBlockHash?: string;
 
     // Constructor - argument data will be the object containing the transaction data
     constructor(data: string){
@@ -79,6 +73,10 @@ class Block implements IBlock {
             // Resolve with the data if the object isn't the Genesis block
         });
 
+    }
+
+    getHeight(): number {
+        return this.height;
     }
 }
 
