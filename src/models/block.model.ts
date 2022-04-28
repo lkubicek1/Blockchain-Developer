@@ -9,8 +9,14 @@
  *  run asynchronous.
  */
 
+const hex2ascii = require('hex2ascii');
+const sha256 = require('crypto-js/sha256');
+
+const GENESIS_BLOCK: string = 'Genesis Block';
+
 export interface IBlock {
-    validate(): Promise<any>;
+    init(): Promise<IBlock>;
+    validate(): Promise<boolean>;
     getBData(): Promise<any>;
     getHeight(): number;
 }
@@ -19,39 +25,43 @@ class Block implements IBlock {
     hash?: string;              // Hash of the block
     height: number;             // Block Height (consecutive number of each block)
     body: string;               // Will contain the transactions stored in the block, by default it will encode the data
-    time: number;               // Timestamp for the Block creation
+    time: string;               // Timestamp for the Block creation
     previousBlockHash?: string;  // Reference to the previous Block Hash
 
+
     // Constructor - argument data will be the object containing the transaction data
-    constructor(data: string){
-        this.height = 0;
+    constructor(data: any, height: number, previousBlockHash: string){
+        this.height = height;
         this.body = Buffer.from(JSON.stringify(data)).toString('hex');
-        this.time = 0;
+        this.time = new Date().getTime().toString().slice(0,-3);
+        this.previousBlockHash = previousBlockHash;
     }
+
+    init(): Promise<IBlock> {
+        let self = this;
+        return new Promise<IBlock>(resolve => {
+            self.hash = sha256(JSON.stringify(self.getBlockObject())).toString();
+            resolve(self);
+        });
+    };
 
     /**
      *  validate() method will validate if the block has been tampered or not.
      *  Been tampered means that someone from outside the application tried to change
-     *  values in the block data as a consecuence the hash of the block should be different.
+     *  values in the block data as a consequence the hash of the block should be different.
      *  Steps:
      *  1. Return a new promise to allow the method be called asynchronous.
      *  2. Save the in auxiliary variable the current hash of the block (`this` represent the block object)
      *  3. Recalculate the hash of the entire block (Use SHA256 from crypto-js library)
      *  4. Compare if the auxiliary hash value is different from the calculated one.
-     *  5. Resolve true or false depending if it is valid or not.
+     *  5. Resolve true or false depending on if it is valid or not.
      *  Note: to access the class values inside a Promise code you need to create an auxiliary value `let self = this;`
      */
-    validate(): Promise<any> {
+    validate(): Promise<boolean> {
         let self = this;
-        return new Promise((resolve, reject) => {
-            // Save in auxiliary variable the current block hash
-
-            // Recalculate the hash of the Block
-            // Comparing if the hashes changed
-            // Returning the Block is not valid
-
-            // Returning the Block is valid
-
+        return new Promise<boolean>(resolve => {
+            const calculatedHash = sha256(JSON.stringify(self.getBlockObject())).toString();
+            resolve(self.hash == calculatedHash);
         });
     }
 
@@ -66,17 +76,29 @@ class Block implements IBlock {
      */
     getBData(): Promise<any> {
         return new Promise((resolve, reject) => {
-            // Getting the encoded data saved in the Block
-            // Decoding the data to retrieve the JSON representation of the object
-            // Parse the data to an object to be retrieve.
-
-            // Resolve with the data if the object isn't the Genesis block
+            const decodedBody: any = JSON.parse(hex2ascii(this.body));
+            if(decodedBody.data == GENESIS_BLOCK) {
+                reject(Error(GENESIS_BLOCK));
+            } else {
+                resolve(decodedBody);
+            }
         });
     }
 
     getHeight(): number {
         return this.height;
     }
+
+    //Helper function for hash calculation
+    getBlockObject(): any {
+        return {
+            height: this.height,
+            body: this.body,
+            time: this.time,
+            previousBlockHash: this.previousBlockHash
+        };
+    }
 }
 
 module.exports.Block = Block;                                                       // Exposing the Block class as a module
+module.exports.GENESIS_BLOCK = GENESIS_BLOCK;
