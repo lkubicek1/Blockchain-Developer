@@ -10,25 +10,22 @@
 import {IBlock} from "./block.model";
 
 const BlockClass = require('./block.model');
-const SHA256 = require('crypto-js/sha256');
 const bitcoinMessage = require('bitcoinjs-message');
 
 export interface IBlockchain {
-    initializeChain(): Promise<any>;
-    getChainHeight(): Promise<any>;
-    _addBlock(block: IBlock): Promise<any>;
+    initializeChain(): Promise<IBlockchain>;
+    getChainHeight(): Promise<number>;
     requestMessageOwnershipVerification(address: string): Promise<any>;
     submitStar(address: string, message: string, signature: string, star: string): Promise<any>;
-    getBlockByHash(hash: string): Promise<any>;
-    getBlockByHeight(height: number): Promise<any>;
+    getBlockByHash(hash: string): Promise<IBlock|undefined|null>;
+    getBlockByHeight(height: number): Promise<IBlock|undefined|null>;
     getStarsByWalletAddress (address: string): Promise<any>;
     validateChain(): Promise<any>;
 }
 
-class Blockchain implements IBlockchain{
+class Blockchain implements IBlockchain {
 
     chain: Array<IBlock>;
-    height: number;
 
     /**
      * Constructor of the class, you will need to setup your chain array and the height
@@ -40,8 +37,6 @@ class Blockchain implements IBlockchain{
      */
     constructor() {
         this.chain = [];
-        this.height = -1;
-        this.initializeChain();
     }
 
     /**
@@ -49,24 +44,29 @@ class Blockchain implements IBlockchain{
      * You should use the `addBlock(block)` to create the Genesis Block
      * Passing as a data `{data: 'Genesis Block'}`
      */
-    async initializeChain(): Promise<any> {
-        if( this.height === -1){
-            let block = new BlockClass.Block({data: 'Genesis Block'});
-            await this._addBlock(block);
-        }
+    async initializeChain(): Promise<IBlockchain> {
+        return this.getChainHeight()
+            .then(async height => {
+                if (height === -1) {
+                    let block: IBlock = new BlockClass.Block({data: BlockClass.GENESIS_BLOCK});
+                    await this._addBlock(block);
+                }
+                let self = this;
+                return new Promise<IBlockchain>(resolve => resolve(self));
+            });
     }
 
     /**
      * Utility method that return a Promise that will resolve with the height of the chain
      */
-    getChainHeight(): Promise<any> {
+    getChainHeight(): Promise<number> {
         return new Promise((resolve, reject) => {
-            resolve(this.height);
+            resolve(this.chain.length - 1);
         });
     }
 
     /**
-     * _addBlock(block) will store a block in the chain
+     * _addBlock(data) will store a block in the chain
      * @param {*} block
      * The method will return a Promise that will resolve with the block added
      * or reject if an error happen during the execution.
@@ -77,10 +77,21 @@ class Blockchain implements IBlockchain{
      * Note: the symbol `_` in the method name indicates in the javascript convention
      * that this method is a private method.
      */
-    _addBlock(block: IBlock): Promise<any> {
+    _addBlock(block: IBlock): Promise<IBlock> {
         let self = this;
-        return new Promise(async (resolve, reject) => {
-
+        return new Promise(async resolve => {
+            return self.getChainHeight()
+                .then(height => {
+                    return self.getBlockByHeight(height)
+                        .then(previousBlock => {
+                            const previousBlockHash = previousBlock?.getHash();
+                            return block.init(height + 1, previousBlockHash)
+                                .then(nextBlock => {
+                                    self.chain.push(nextBlock);
+                                    resolve(block);
+                                });
+                        });
+                });
         });
     }
 
@@ -128,10 +139,11 @@ class Blockchain implements IBlockchain{
      * Search on the chain array for the block that has the hash.
      * @param {*} hash
      */
-    getBlockByHash(hash: string): Promise<any> {
+    getBlockByHash(hash: string): Promise<IBlock|undefined|null> {
         let self = this;
-        return new Promise((resolve, reject) => {
-
+        return new Promise(resolve => {
+            let block: IBlock|undefined = self.chain.find(b => b.getHash() === hash);
+            resolve(block);
         });
     }
 
@@ -140,15 +152,11 @@ class Blockchain implements IBlockchain{
      * with the height equal to the parameter `height`
      * @param {*} height
      */
-    getBlockByHeight(height: number): Promise<any> {
+    getBlockByHeight(height: number): Promise<IBlock|undefined|null> {
         let self = this;
-        return new Promise((resolve, reject) => {
-            let block = self.chain.filter(p => p.getHeight() === height)[0];
-            if(block){
-                resolve(block);
-            } else {
-                resolve(null);
-            }
+        return new Promise(resolve => {
+            let block: IBlock|undefined = self.chain.find(p => p.getHeight() === height);
+            resolve(block)
         });
     }
 

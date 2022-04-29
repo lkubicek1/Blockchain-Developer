@@ -15,32 +15,33 @@ const sha256 = require('crypto-js/sha256');
 const GENESIS_BLOCK: string = 'Genesis Block';
 
 export interface IBlock {
-    init(): Promise<IBlock>;
+    init(height: number|undefined|null, previousBlockHash: string|undefined|null): Promise<IBlock>;
     validate(): Promise<boolean>;
     getBData(): Promise<any>;
-    getHeight(): number;
+
+    getHeight(): number|undefined|null;
+    getHash(): string|undefined|null;
 }
 
 class Block implements IBlock {
     hash?: string;              // Hash of the block
-    height: number;             // Block Height (consecutive number of each block)
+    height?: number;             // Block Height (consecutive number of each block)
     body: string;               // Will contain the transactions stored in the block, by default it will encode the data
-    time: string;               // Timestamp for the Block creation
+    time?: string;               // Timestamp for the Block creation
     previousBlockHash?: string;  // Reference to the previous Block Hash
 
-
     // Constructor - argument data will be the object containing the transaction data
-    constructor(data: any, height: number, previousBlockHash: string){
-        this.height = height;
+    constructor(data: any) {
         this.body = Buffer.from(JSON.stringify(data)).toString('hex');
-        this.time = new Date().getTime().toString().slice(0,-3);
-        this.previousBlockHash = previousBlockHash;
     }
 
-    init(): Promise<IBlock> {
+    init(height: number, previousBlockHash: string): Promise<IBlock> {
         let self = this;
         return new Promise<IBlock>(resolve => {
-            self.hash = sha256(JSON.stringify(self.getBlockObject())).toString();
+            self.time = new Date().getTime().toString().slice(0,-3);
+            self.height = height;
+            self.previousBlockHash = previousBlockHash;
+            self.hash = sha256(JSON.stringify(self._getBlockObject())).toString();
             resolve(self);
         });
     };
@@ -60,7 +61,7 @@ class Block implements IBlock {
     validate(): Promise<boolean> {
         let self = this;
         return new Promise<boolean>(resolve => {
-            const calculatedHash = sha256(JSON.stringify(self.getBlockObject())).toString();
+            const calculatedHash = sha256(JSON.stringify(self._getBlockObject())).toString();
             resolve(self.hash == calculatedHash);
         });
     }
@@ -85,12 +86,16 @@ class Block implements IBlock {
         });
     }
 
-    getHeight(): number {
+    getHeight(): number | undefined {
         return this.height;
     }
 
+    getHash(): string | undefined {
+        return this.hash;
+    }
+
     //Helper function for hash calculation
-    getBlockObject(): any {
+    _getBlockObject(): any {
         return {
             height: this.height,
             body: this.body,
