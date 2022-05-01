@@ -63,10 +63,10 @@ class BlockchainController {
     submitStar() {
         this.app.post("/submitstar", async (req, res) => {
             if(req.body.address && req.body.message && req.body.signature && req.body.star) {
-                const address = req.body.address;
-                const message = req.body.message;
-                const signature = req.body.signature;
-                const star = req.body.star;
+                const address: string = req.body.address;
+                const message: string = req.body.message;
+                const signature: string = req.body.signature;
+                const star: any = req.body.star;
                 try {
                     let block = await this.blockchain.submitStar(address, message, signature, star);
                     if(block){

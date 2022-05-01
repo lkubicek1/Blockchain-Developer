@@ -21,6 +21,7 @@ export interface IBlock {
 
     getHeight(): number|undefined|null;
     getHash(): string|undefined|null;
+    getPreviousBlockHash(): string|undefined|null;
 }
 
 class Block implements IBlock {
@@ -62,6 +63,7 @@ class Block implements IBlock {
         let self = this;
         return new Promise<boolean>(resolve => {
             const calculatedHash = sha256(JSON.stringify(self._getBlockObject())).toString();
+            let isValid: boolean = self.hash == calculatedHash;
             resolve(self.hash == calculatedHash);
         });
     }
@@ -79,19 +81,23 @@ class Block implements IBlock {
         return new Promise((resolve, reject) => {
             const decodedBody: any = JSON.parse(hex2ascii(this.body));
             if(decodedBody.data == GENESIS_BLOCK) {
-                reject(Error(GENESIS_BLOCK));
+                reject(new Error(GENESIS_BLOCK));
             } else {
                 resolve(decodedBody);
             }
         });
     }
 
-    getHeight(): number | undefined {
+    getHeight(): number|undefined|null {
         return this.height;
     }
 
-    getHash(): string | undefined {
+    getHash(): string|undefined|null {
         return this.hash;
+    }
+
+    getPreviousBlockHash(): string|undefined|null {
+        return this.previousBlockHash;
     }
 
     //Helper function for hash calculation

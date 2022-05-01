@@ -1,5 +1,5 @@
 {
-  "name": "blockchain_privateblockchain",
+  "name": "project1_PrivateBlockchain",
   "version": "1.0.0",
   "description": "",
   "main": "server.ts",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lkubicek1/Blockchain_PrivateBlockchain.git"
+    "url": "git+https://github.com/lkubicek1/Blockchain-Developer.git"
   },
   "author": "lkubicek",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/lkubicek1/Blockchain_PrivateBlockchain/issues"
+    "url": "https://github.com/lkubicek1/Blockchain-Developer/issues"
   },
-  "homepage": "https://github.com/lkubicek1/Blockchain_PrivateBlockchain#readme",
+  "homepage": "https://github.com/lkubicek1/Blockchain-Developer#readme",
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jest": "^27.4.1",

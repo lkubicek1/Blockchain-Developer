@@ -8,15 +8,15 @@
  *
  */
 import {IBlock} from "./block.model";
+import {StarCoin} from "./star.model";
 
 const BlockClass = require('./block.model');
-const bitcoinMessage = require('bitcoinjs-message');
 
 export interface IBlockchain {
     initializeChain(): Promise<IBlockchain>;
     getChainHeight(): Promise<number>;
-    requestMessageOwnershipVerification(address: string): Promise<any>;
-    submitStar(address: string, message: string, signature: string, star: string): Promise<any>;
+    requestMessageOwnershipVerification(address: string): Promise<string>;
+    submitStar(address: string, message: string|undefined|null, signature: string|undefined|null, star: any): Promise<IBlock>;
     getBlockByHash(hash: string): Promise<IBlock|undefined|null>;
     getBlockByHeight(height: number): Promise<IBlock|undefined|null>;
     getStarsByWalletAddress (address: string): Promise<any>;
@@ -103,14 +103,14 @@ class Blockchain implements IBlockchain {
      * The method return a Promise that will resolve with the message to be signed
      * @param {*} address
      */
-    requestMessageOwnershipVerification(address: string): Promise<any> {
+    requestMessageOwnershipVerification(address: string): Promise<string> {
         return new Promise((resolve) => {
-
+            resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`)
         });
     }
 
     /**
-     * The submitStar(address, message, signature, star) method
+     * The submitStar(address: string, message: string, signature: string, star: any) method
      * will allow users to register a new Block with the star object
      * into the chain. This method will resolve with the Block added or
      * reject with an error.
@@ -118,7 +118,7 @@ class Blockchain implements IBlockchain {
      * 1. Get the time from the message sent as a parameter example: `parseInt(message.split(':')[1])`
      * 2. Get the current time: `let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));`
      * 3. Check if the time elapsed is less than 5 minutes
-     * 4. Veify the message with wallet address and signature: `bitcoinMessage.verify(message, address, signature)`
+     * 4. Verify the message with wallet address and signature: `bitcoinMessage.verify(message, address, signature)`
      * 5. Create the block and add it to the chain
      * 6. Resolve with the block added.
      * @param {*} address
@@ -126,9 +126,32 @@ class Blockchain implements IBlockchain {
      * @param {*} signature
      * @param {*} star
      */
-    submitStar(address: string, message: string, signature: string, star: string): Promise<any> {
+    submitStar(address: string, message: string|undefined|null, signature: string|undefined|null, star: any): Promise<IBlock> {
         let self = this;
+
+        const starCoin: StarCoin = new StarCoin(address, message, signature, star);
         return new Promise(async (resolve, reject) => {
+            if(starCoin.getTime() == null) {
+                reject(new Error("Null starCoin time.  Unable to submit."));
+                return;
+            }
+
+            let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+            let elapsedSeconds: number = currentTime - <number>starCoin.getTime();
+            if(elapsedSeconds > (5 * 60)) {
+                reject(new Error(`Elapsed Time ${elapsedSeconds} is greater than 5 minutes.  Unable to submit`));
+                return;
+            }
+
+            try {
+                let verified: boolean = starCoin.verify();
+                let block: IBlock = new BlockClass.Block(starCoin.toDataObject());
+                if(verified) {
+                    resolve(await self._addBlock(block));
+                } else reject(block);
+            } catch (err) {
+                reject(new Error("Verification failure: " + err));
+            }
 
         });
     }
@@ -168,10 +191,15 @@ class Blockchain implements IBlockchain {
      */
     getStarsByWalletAddress (address: string): Promise<any> {
         let self = this;
-        let stars = [];
-        return new Promise((resolve, reject) => {
-
-        });
+        return Promise.all(self.chain
+            .filter(b => {
+                return b.getBData()
+                    .then(data => {
+                        if (data.hasOwnProperty("address")) {
+                            return Promise.resolve(data.address == address);
+                        } else return Promise.resolve(false);
+                    });
+            }));
     }
 
     /**
@@ -180,14 +208,49 @@ class Blockchain implements IBlockchain {
      * 1. You should validate each block using `validateBlock`
      * 2. Each Block should check the with the previousBlockHash
      */
-    validateChain(): Promise<any> {
+    validateChain(): Promise<Array<IBlock>> {
         let self = this;
-        let errorLog = [];
-        return new Promise(async (resolve, reject) => {
+        return new Promise<Array<IBlock>>(resolve => {
+            let errorLog: Array<IBlock> = [];
+            self.chain.forEach(async b => {
+                if (b.getHeight() === 0) { //Genesis Block
+                    if(!await b.validate()) errorLog.push(b);
+                    return;
+                }
 
+                let blockHeight = b.getHeight();
+                if (blockHeight == null) {
+                    errorLog.push(b);
+                    return;
+                }
+
+                let previousBlock: IBlock|undefined|null = await self.getBlockByHeight(<number>blockHeight - 1);
+                if (previousBlock == null) {
+                    errorLog.push(b);
+                    return;
+                }
+                if (previousBlock.getHeight() !== 0) {
+                    if (previousBlock.getPreviousBlockHash() == null) {
+                        errorLog.push(b);
+                        return;
+                    }
+                }
+
+                if (b.getPreviousBlockHash() == null) {
+                    errorLog.push(b);
+                    return;
+                }
+                if (previousBlock.getHash() !== b.getPreviousBlockHash()) { //Broken Chain
+                    errorLog.push(b);
+                    return;
+                }
+
+                let isValid: boolean = await b.validate();
+                if(!isValid) errorLog.push(b);
+            });
+            resolve(errorLog);
         });
     }
-
 }
 
 module.exports.Blockchain = Blockchain;
