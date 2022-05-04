@@ -1,6 +1,5 @@
 import {IBlockchain} from "../../models/blockchain.model";
 import {IBlock} from "../../models/block.model";
-import bitcoinMessage from "bitcoinjs-message";
 import {StarCoin} from "../../models/star.model";
 
 
@@ -55,11 +54,25 @@ describe('Blockchain Class', () => {
             });
     });
 
-    test('Validate empty chain', () => {
+    test('Validate empty chain test', () => {
         let blockchain: IBlockchain = new BlockchainClass.Blockchain();
         return blockchain.initializeChain()
             .then(initializedChain => {
                 return expect(initializedChain.validateChain()).resolves.toHaveLength(0);
+            });
+    });
+
+    test('Validate empty chain invalid genesis block test', () => {
+        let blockchain: IBlockchain = new BlockchainClass.Blockchain();
+        return blockchain.initializeChain()
+            .then(initializedChain => {
+                let castedChain: any = <any>initializedChain;
+                return Promise.resolve(castedChain.chain[0])
+                    .then(b => {
+                        b.body = { data: 'Tampered with' };
+                        expect(b.validate()).resolves.toEqual(false);
+                        return expect(initializedChain.validateChain()).resolves.toHaveLength(1);
+                    })
             });
     });
 
@@ -92,7 +105,6 @@ describe('Blockchain Class', () => {
                     .then(() => {
                         return expect(initializedChain.validateChain()).resolves.toHaveLength(0);
                     });
-
             });
     });
 

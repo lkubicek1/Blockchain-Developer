@@ -19,7 +19,7 @@ export interface IBlockchain {
     submitStar(address: string, message: string|undefined|null, signature: string|undefined|null, star: any): Promise<IBlock>;
     getBlockByHash(hash: string): Promise<IBlock|undefined|null>;
     getBlockByHeight(height: number): Promise<IBlock|undefined|null>;
-    getStarsByWalletAddress (address: string): Promise<any>;
+    getStarsByWalletAddress (address: string): Promise<Array<any>>;
     validateChain(): Promise<any>;
 }
 
@@ -178,7 +178,9 @@ class Blockchain implements IBlockchain {
     getBlockByHeight(height: number): Promise<IBlock|undefined|null> {
         let self = this;
         return new Promise(resolve => {
-            let block: IBlock|undefined = self.chain.find(p => p.getHeight() === height);
+            let block: IBlock|undefined = self.chain
+                .filter(p => p !== null)
+                .find(p => p.getHeight() === height);
             resolve(block)
         });
     }
@@ -189,17 +191,26 @@ class Blockchain implements IBlockchain {
      * Remember the star should be returned decoded.
      * @param {*} address
      */
-    getStarsByWalletAddress (address: string): Promise<any> {
+
+    //Reference: https://knowledge.udacity.com/questions/282668
+
+    getStarsByWalletAddress (address: string): Promise<Array<any>> {
         let self = this;
-        return Promise.all(self.chain
-            .filter(b => {
-                return b.getBData()
-                    .then(data => {
-                        if (data.hasOwnProperty("address")) {
-                            return Promise.resolve(data.address == address);
-                        } else return Promise.resolve(false);
+        return new Promise(resolve => {
+            let stars: Array<any> = [];
+            self.chain
+                .filter(b => b !== null)
+                .filter(b => b.getHeight() !== null && b.getHeight() !== 0)
+                .map(b => b.getBData())
+                .forEach(data => {
+                    data.then(d => {
+                        if (d.hasOwnProperty("address")) {
+                            if(d.address === address) stars.push(d);
+                        }
                     });
-            }));
+                });
+            resolve(stars);
+        });
     }
 
     /**
@@ -213,6 +224,11 @@ class Blockchain implements IBlockchain {
         return new Promise<Array<IBlock>>(resolve => {
             let errorLog: Array<IBlock> = [];
             self.chain.forEach(async b => {
+                if(b === null) {
+                    errorLog.push(b);
+                    return;
+                }
+
                 if (b.getHeight() === 0) { //Genesis Block
                     if(!await b.validate()) errorLog.push(b);
                     return;
