@@ -16,6 +16,7 @@ class BlockchainController {
     constructor(app: Express, blockchainObj: IBlockchain) {
         this.app = app;
         this.blockchain = blockchainObj;
+        this.blockchain.initializeChain();
         // All the endpoints methods needs to be called in the constructor to initialize the route.
         this.getBlockByHeight();
         this.requestOwnership();

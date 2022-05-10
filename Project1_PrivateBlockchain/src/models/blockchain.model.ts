@@ -49,6 +49,7 @@ class Blockchain implements IBlockchain {
             .then(async height => {
                 if (height === -1) {
                     let block: IBlock = new BlockClass.Block({data: BlockClass.GENESIS_BLOCK});
+                    console.log("Initializing block: " + BlockClass.GENESIS_BLOCK);
                     await this._addBlock(block);
                 }
                 let self = this;
