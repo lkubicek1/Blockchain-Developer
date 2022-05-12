@@ -46,5 +46,21 @@ This application is built on `Node.js` and `Express`. The architecture will use 
 6. If everything is okay the star information will be stored in the block and added to the `chain` encoding the Star information.
 7. The application will allow us to retrieve the Star objects belong to an owner (wallet address). This information should be human readable so it shouldn't be encoded.
 ## Application Run Example
+1. Run the application using `npm dev`.  You should see in your terminal a message indicating that the server is listening in port 8000:
+    
+    `Server Listening for port: 8000`
 
-[//]: # (TODO Insert POSTMAN screenshots)
+2. To make sure your application creates the Genesis Block you can use POSTMAN to request the Genesis block with the following endpoint: `http://localhost:8000/block/height/0`
+
+    ![private blockchain](/assets/Image0_gblock.JPG "Genesis Block")
+
+3. Request ownership of your wallet address with `POST` endpoint: `http://localhost:8000/requestValidation`.  Add your wallet address to the post body.
+   
+   **Note:** If using Bitcoin Core, you must add `addresstype=legacy` to your `bitcoin.conf` file.
+   ![private blockchain](/assets/Image1_validation.JPG "Request Validation")
+4. Sign the message with your Wallet:
+   ![private blockchain](/assets/Image2_sign.JPG "Sign Message")
+5. Submit your Star using `POST` request: `http://localhost:8000/submitStar`.  Make sure you add the `address`, `signature`, `message` and `star` to the `POST` body.
+   ![private blockchain](/assets/Image3_submit.JPG "Submit")
+5. Retrieve owned stars using `GET` request: `http://localhost:8000/blocks/:address`
+   ![private blockchain](/assets/Image4_retrieve.JPG "Submit")

@@ -133,14 +133,18 @@ class Blockchain implements IBlockchain {
         const starCoin: StarCoin = new StarCoin(address, message, signature, star);
         return new Promise(async (resolve, reject) => {
             if(starCoin.getTime() == null) {
-                reject(new Error("Null starCoin time.  Unable to submit."));
+                let errMsg: string = "Null starCoin time.  Unable to submit.";
+                console.log(errMsg);
+                reject(new Error(errMsg));
                 return;
             }
 
             let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
             let elapsedSeconds: number = currentTime - <number>starCoin.getTime();
             if(elapsedSeconds > (5 * 60)) {
-                reject(new Error(`Elapsed Time ${elapsedSeconds} is greater than 5 minutes.  Unable to submit`));
+                let errMsg: string = `Elapsed Time ${elapsedSeconds} is greater than 5 minutes.  Unable to submit`;
+                console.log(errMsg);
+                reject(new Error(errMsg));
                 return;
             }
 
@@ -151,7 +155,9 @@ class Blockchain implements IBlockchain {
                     resolve(await self._addBlock(block));
                 } else reject(block);
             } catch (err) {
-                reject(new Error("Verification failure: " + err));
+                let errMsg: string = "Verification failure: " + err;
+                console.log(errMsg);
+                reject(new Error(errMsg));
             }
 
         });
