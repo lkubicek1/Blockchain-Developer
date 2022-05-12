@@ -63,7 +63,6 @@ class Block implements IBlock {
         let self = this;
         return new Promise<boolean>(resolve => {
             const calculatedHash = sha256(JSON.stringify(self._getBlockObject())).toString();
-            let isValid: boolean = self.hash == calculatedHash;
             resolve(self.hash == calculatedHash);
         });
     }

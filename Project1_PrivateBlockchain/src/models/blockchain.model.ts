@@ -80,19 +80,31 @@ class Blockchain implements IBlockchain {
      */
     _addBlock(block: IBlock): Promise<IBlock> {
         let self = this;
-        return new Promise(async resolve => {
-            return self.getChainHeight()
-                .then(height => {
-                    return self.getBlockByHeight(height)
-                        .then(previousBlock => {
-                            const previousBlockHash = previousBlock?.getHash();
-                            return block.init(height + 1, previousBlockHash)
-                                .then(nextBlock => {
-                                    self.chain.push(nextBlock);
-                                    resolve(block);
-                                });
-                        });
-                });
+        return new Promise(async (resolve, reject) => {
+            try {
+                let height: number = await self.getChainHeight();
+                let previousBlock: IBlock|undefined|null = await self.getBlockByHeight(height);
+                const previousBlockHash = previousBlock?.getHash();
+
+                let nextBlock: IBlock = await block.init(height + 1, previousBlockHash);
+
+                let isValid = await nextBlock.validate();
+                if(!isValid) {
+                    throw new Error("Block is not valid.");
+                }
+
+                self.chain.push(nextBlock);
+                let errorLog: Array<IBlock> = await self.validateChain();
+                if(errorLog.length !== 0) {
+                    self.chain.pop();
+                    throw new Error("The new block is invalid.  Reverting chain.");
+                }
+                resolve(nextBlock);
+            } catch (err) {
+                let errMsg: string = "Failed to addBlock due to: " + err;
+                console.log(errMsg)
+                reject(errMsg);
+            }
         });
     }
 
@@ -212,7 +224,10 @@ class Blockchain implements IBlockchain {
                 .forEach(data => {
                     data.then(d => {
                         if (d.hasOwnProperty("address")) {
-                            if(d.address === address) stars.push(d);
+                            if(d.address === address) stars.push({
+                                owner: d.address,
+                                star: d["star"]
+                            });
                         }
                     });
                 });
