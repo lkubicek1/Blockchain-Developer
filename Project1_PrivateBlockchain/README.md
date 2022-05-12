@@ -55,12 +55,19 @@ This application is built on `Node.js` and `Express`. The architecture will use 
     ![private blockchain](assets/Image0_gblock.JPG "Genesis Block")
 
 3. Request ownership of your wallet address with `POST` endpoint: `http://localhost:8000/requestValidation`.  Add your wallet address to the post body.
-   
+
    **Note:** If using Bitcoin Core, you must add `addresstype=legacy` to your `bitcoin.conf` file.
+
    ![private blockchain](assets/Image1_validation.JPG "Request Validation")
+
 4. Sign the message with your Wallet:
+
    ![private blockchain](assets/Image2_sign.JPG "Sign Message")
+
 5. Submit your Star using `POST` request: `http://localhost:8000/submitStar`.  Make sure you add the `address`, `signature`, `message` and `star` to the `POST` body.
+
    ![private blockchain](assets/Image3_submit.JPG "Submit")
-5. Retrieve owned stars using `GET` request: `http://localhost:8000/blocks/:address`
+
+6. Retrieve owned stars using `GET` request: `http://localhost:8000/blocks/:address`
+
    ![private blockchain](assets/Image4_retrieve.JPG "Submit")
