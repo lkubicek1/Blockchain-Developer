@@ -1,0 +1,22 @@
+Ethereum
+
+https://ethereum.org/en/
+
+yellowpaper: https://github.com/ethereum/yellowpaper
+
+Etherscan: https://etherscan.io/
+Metamask: https://metamask.io/
+Remix: https://remix.ethereum.org/
+web3: https://web3js.readthedocs.io/en/1.0/
+Infura: https://infura.io/
+Ganache: https://truffleframework.com/ganache
+Truffle: https://truffleframework.com/
+Geth: https://geth.ethereum.org/
+
+Gitter: https://gitter.im/ethereum/home
+Twitter: https://twitter.com/ethereum
+StackExchange: https://ethereum.stackexchange.com
+Meetup: https://www.meetup.com/topics/ethereum/
+
+https://dappradar.com
+https://www.stateofthedapps.com/
