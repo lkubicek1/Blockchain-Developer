@@ -20,3 +20,5 @@ Meetup: https://www.meetup.com/topics/ethereum/
 
 https://dappradar.com
 https://www.stateofthedapps.com/
+https://ethstats.net/
+http://ethdocs.org/en/latest/ether.html
