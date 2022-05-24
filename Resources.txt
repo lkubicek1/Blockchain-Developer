@@ -22,3 +22,7 @@ https://dappradar.com
 https://www.stateofthedapps.com/
 https://ethstats.net/
 http://ethdocs.org/en/latest/ether.html
+https://solidity.readthedocs.io/en/v0.4.24/
+https://github.com/udacity/nd1309-work-code
+https://blockgeeks.com/guides/ethereum-token/
+https://faucet.rinkeby.io/
